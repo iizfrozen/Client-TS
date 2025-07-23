@@ -419,7 +419,9 @@ export default abstract class GameShell {
         this.lastMouseClickTime = performance.now();
 
         if (this.isMobile && !this.isCapacitor) {
-            if (this.insideMobileInputArea() && !this.insideChatPopupArea()) {
+            if (this.insideMobileInputArea() && !this.insideUsernameArea() && !this.inPasswordArea() && !this.insideChatPopupArea()) {
+                // Negate the mousedown event - it's inside mobile input area
+                // It will be handled by mouseup.
                 this.lastMouseClickButton = 1;
                 this.mouseButton = 1;
                 return;
@@ -708,12 +710,19 @@ export default abstract class GameShell {
         );
     }
 
-    private insideChatPopupArea() {
+    protected insideChatPopupArea() {
         const chatInputAreaX1: number = 17;
         const chatInputAreaY1: number = 357;
         const chatInputAreaX2: number = chatInputAreaX1 + 479;
         const chatInputAreaY2: number = chatInputAreaY1 + 96;
-        return this.ingame && (this.isChatBackInputOpen() || this.isShowSocialInput()) && this.mouseX >= chatInputAreaX1 && this.mouseX <= chatInputAreaX2 && this.mouseY >= chatInputAreaY1 && this.mouseY <= chatInputAreaY2;
+        return (
+            this.ingame &&
+            (this.isChatBackInputOpen() || this.isShowSocialInput()) &&
+            this.mouseX >= chatInputAreaX1 &&
+            this.mouseX <= chatInputAreaX2 &&
+            this.mouseY >= chatInputAreaY1 &&
+            this.mouseY <= chatInputAreaY2
+        );
     }
 
     private insideReportInterfaceTextArea() {
@@ -737,10 +746,10 @@ export default abstract class GameShell {
             return false;
         }
 
-        const reportInputAreaX1: number = 82;
-        const reportInputAreaY1: number = 137;
-        const reportInputAreaX2: number = reportInputAreaX1 + 366;
-        const reportInputAreaY2: number = reportInputAreaY1 + 26;
+        const reportInputAreaX1: number = 87;
+        const reportInputAreaY1: number = 119;
+        const reportInputAreaX2: number = reportInputAreaX1 + 348;
+        const reportInputAreaY2: number = reportInputAreaY1 + 37;
         return this.mouseX >= reportInputAreaX1 && this.mouseX <= reportInputAreaX2 && this.mouseY >= reportInputAreaY1 && this.mouseY <= reportInputAreaY2;
     }
 
@@ -797,6 +806,8 @@ export default abstract class GameShell {
             x: e.clientX - canvasBounds.left,
             y: e.clientY - canvasBounds.top
         };
+        let newX = 0;
+        let newY = 0;
 
         if (this.isFullScreen()) {
             // Fullscreen logic will ensure the canvas aspect ratio is
@@ -827,29 +838,23 @@ export default abstract class GameShell {
             }
             const scaleX = fixedWidth / trueCanvasWidth;
             const scaleY = fixedHeight / trueCanvasHeight;
-            this.mouseX = ((clickLocWithinCanvas.x - offsetX) * scaleX) | 0;
-            this.mouseY = ((clickLocWithinCanvas.y - offsetY) * scaleY) | 0;
+            newX = ((clickLocWithinCanvas.x - offsetX) * scaleX) | 0;
+            newY = ((clickLocWithinCanvas.y - offsetY) * scaleY) | 0;
         } else {
             const scaleX: number = canvas.width / canvasBounds.width;
             const scaleY: number = canvas.height / canvasBounds.height;
-            this.mouseX = (clickLocWithinCanvas.x * scaleX) | 0;
-            this.mouseY = (clickLocWithinCanvas.y * scaleY) | 0;
+            newX = (clickLocWithinCanvas.x * scaleX) | 0;
+            newY = (clickLocWithinCanvas.y * scaleY) | 0;
         }
 
-        if (this.mouseX < 0) {
-            this.mouseX = 0;
-        }
-
-        if (this.mouseY < 0) {
-            this.mouseY = 0;
-        }
-
-        if (this.mouseX > fixedWidth) {
-            this.mouseX = fixedWidth;
-        }
-
-        if (this.mouseY > fixedHeight) {
-            this.mouseY = fixedHeight;
+        // Specifically filter events outside of bounds of canvas; this can
+        // happen if fullscreen mode is on due to letterboxing! The result is
+        // that the mouse appears to move up/down vertically along X:0 if they
+        // move mouse on the black section to the left, vice versa for other
+        // sides, depending on aspect ratio.
+        if (newX >= 0 && newX < fixedWidth && newY >= 0 && newY < fixedHeight) {
+            this.mouseX = newX;
+            this.mouseY = newY;
         }
     }
 }

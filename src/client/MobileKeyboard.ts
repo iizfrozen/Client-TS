@@ -105,9 +105,9 @@ class MobileKeyboard {
     public show(originX?: number, originY?: number) {
         if (this.mode === UserKeyboardMode.Hybrid) {
             if (isFullScreen()) {
-                this.canvasKeyboard.show();
+                this.canvasKeyboard.show(originX, originY);
             } else {
-                this.nativeKeyboard.show();
+                this.nativeKeyboard.show(originX, originY);
             }
         } else if (this.mode === UserKeyboardMode.Canvas) {
             this.canvasKeyboard.show(originX, originY);
