@@ -194,6 +194,7 @@ export class Client extends GameShell {
     private minimapMaskLineOffsets: Int32Array = new Int32Array(151);
     private minimapMaskLineLengths: Int32Array = new Int32Array(151);
 
+    private imageBackvmid1: Pix32 | null = null;
     private imageInvback: Pix8 | null = null;
     private imageChatback: Pix8 | null = null;
     private imageMapback: Pix8 | null = null;
@@ -863,9 +864,9 @@ export class Client extends GameShell {
             this.areaBacktop1 = new PixMap(backtop1.cropRight, backtop1.cropBottom);
             backtop1.blitOpaque(0, 0);
 
-            const backvmid1: Pix32 = Pix32.fromArchive(jagMedia, 'backvmid1', 0);
-            this.areaBackvmid1 = new PixMap(backvmid1.cropRight, backvmid1.cropBottom);
-            backvmid1.blitOpaque(0, 0);
+            this.imageBackvmid1 = Pix32.fromArchive(jagMedia, 'backvmid1', 0);
+            this.areaBackvmid1 = new PixMap(41, 154);
+            this.imageBackvmid1.blitOpaque(0, 0);
 
             const backvmid2: Pix32 = Pix32.fromArchive(jagMedia, 'backvmid2', 0);
             this.areaBackvmid2 = new PixMap(backvmid2.cropRight, backvmid2.cropBottom);
@@ -1703,7 +1704,7 @@ export class Client extends GameShell {
 
         this.areaChatback = new PixMap(479, 96);
 
-        this.areaMapback = new PixMap(172, 156);
+        this.areaMapback = new PixMap(168, 160);
         Pix2D.clear();
         this.imageMapback?.draw(0, 0);
 
@@ -1911,11 +1912,11 @@ export class Client extends GameShell {
             // https://developer.chrome.com/blog/timer-throttling-in-chrome-88/
             if (performance.now() - this.idleCycles > 90_000) {
                 // 4500 ticks * 20ms = 90000ms
-                this.idleTimeout = 250;
+                this.idleTimeout = 250; //
                 // 500 ticks * 20ms = 10000ms
                 this.idleCycles = performance.now() - 10_000;
 
-                this.out.p1isaac(ClientProt.IDLE_TIMER);
+                //this.out.p1isaac(ClientProt.IDLE_TIMER); //
             }
 
             this.macroCameraCycle++;
@@ -4320,7 +4321,7 @@ export class Client extends GameShell {
             this.areaBackright1?.draw(722, 4);
             this.areaBackright2?.draw(743, 205);
             this.areaBacktop1?.draw(0, 0);
-            this.areaBackvmid1?.draw(516, 4);
+            this.areaBackvmid1?.draw(516, 6);
             this.areaBackvmid2?.draw(516, 205);
             this.areaBackvmid3?.draw(496, 357);
             this.areaBackhmid2?.draw(0, 338);
@@ -4332,7 +4333,7 @@ export class Client extends GameShell {
 
             if (this.sceneState !== 2) {
                 this.areaViewport?.draw(4, 4);
-                this.areaMapback?.draw(550, 4);
+                this.areaMapback?.draw(557, 0);
             }
         }
 
@@ -4416,7 +4417,9 @@ export class Client extends GameShell {
 
         if (this.sceneState === 2) {
             this.drawMinimap();
-            this.areaMapback?.draw(550, 4);
+            this.drawHpOrbNumber()
+            this.areaBackvmid1?.draw(516, 6);
+            this.areaMapback?.draw(557, 0);
         }
 
         if (this.flashingTab !== -1) {
@@ -10739,6 +10742,25 @@ export class Client extends GameShell {
         if (this.areaViewportOffsets) {
             Pix3D.lineOffset = this.areaViewportOffsets;
         }
+    }
+
+     private drawBackvmid1Again(): void {
+        this.areaBackvmid1?.clear()
+        this.areaBackvmid1?.bind();
+        this.imageBackvmid1?.draw(0, 0);
+        this.areaViewport?.bind();
+    }
+
+    private drawHpOrbNumber(): void {
+        this.drawBackvmid1Again()
+        this.areaBackvmid1?.bind();
+        
+        const currentPrayer = this.getIntString(this.skillLevel[5]);
+        const currentHp = this.getIntString(this.skillLevel[3]);
+        this.fontPlain11?.drawStringTaggableCenter(18, 59, currentHp, 0xFFFFFF, true);
+        this.fontPlain11?.drawStringTaggableCenter(18, 96, currentPrayer, 0xFFFFFF, true);
+        this.fontPlain11?.drawStringTaggableCenter(28, 133, "100", 0xFFFFFF, true);
+        this.areaViewport?.bind();
     }
 
     private drawMinimap(): void {
