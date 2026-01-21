@@ -6136,7 +6136,7 @@ export class Client extends GameShell {
 
                 const com: number = this.in.g2();
                 const inv: Component = Component.types[com];
-                const size: number = this.in.g1();
+                const size: number = this.in.g2();
 
                 if (inv.invSlotObjId && inv.invSlotObjCount) {
                     for (let i: number = 0; i < size; i++) {
@@ -6415,8 +6415,7 @@ export class Client extends GameShell {
                 return true;
             }
 
-            if (
-                this.ptype === ServerProt.OBJ_COUNT ||
+            if (this.ptype === ServerProt.OBJ_COUNT ||
                 this.ptype === ServerProt.LOC_MERGE ||
                 this.ptype === ServerProt.OBJ_REVEAL ||
                 this.ptype === ServerProt.MAP_ANIM ||
@@ -6425,8 +6424,7 @@ export class Client extends GameShell {
                 this.ptype === ServerProt.OBJ_ADD ||
                 this.ptype === ServerProt.LOC_ANIM ||
                 this.ptype === ServerProt.LOC_DEL ||
-                this.ptype === ServerProt.LOC_ADD_CHANGE
-            ) {
+                this.ptype === ServerProt.LOC_ADD_CHANGE) {
                 this.readZonePacket(this.in, this.ptype);
 
                 this.ptype = -1;
